@@ -1,0 +1,39 @@
+name: Automated Daily Commit
+
+on:
+  schedule:
+    - cron: '0 12 * * *' # Wakes up every day at 12:00 UTC
+  workflow_dispatch: # Allows manual testing
+
+jobs:
+  make-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Decide and Execute Commits
+        run: |
+          # Generate a random number from 1 to 4 (25% chance to skip)
+          SKIP_CHECK=$(( ( RANDOM % 4 ) + 1 ))
+          
+          if [ $SKIP_CHECK -eq 1 ]; then
+            echo "Skipping today to simulate a natural gap/break."
+            exit 0
+          fi
+
+          # If not skipped, generate a random number of commits between 5 and 15
+          NUM_COMMITS=$(( ( RANDOM % 11 ) + 5 ))
+          echo "Active day chosen! Generating $NUM_COMMITS commits."
+          
+          git config --local user.email "karthikgveresh@gmail.com"
+          git config --local user.name "karthikgveresh-lgtm"
+          
+          for i in $(seq 1 $NUM_COMMITS)
+          do
+            echo "Automated update loop $i: $(date)" >> daily_status.txt
+            git add daily_status.txt
+            git commit -m "Working on core modules: change $i" --quiet
+          done
+          
+          git push
